@@ -23,32 +23,41 @@ class Mechanism():
         }
 
 
+    def __repr__(self):
+        return str(self.__profile)
+
+
     def __max_approval(self):
         raise NotImplementedError()
 
 
     def __greedy_approval(self):
-        solutions, solution = [], []
+        solution = []
+        projects = enumerate(zip(self.__profile.projects, self.__profile.approvals))
+        budget = self.__profile.budget
 
+        for project, (cost, _) in sorted(projects, key=lambda x: (x[1][1], x[1][0], x[0]), reverse=True):
+            if budget - cost < 0:
+                break
+            
+            solution.append(project)
+            budget -= cost
 
-    def __greedy_recursive(self, solutions, solution, costs, budget):
-        pass
+        return solution
 
 
     def solve(self, mechanism="greedy_approval"):
         try:
-            return self.__mechanisms[mechanism]()
+            projects = self.__mechanisms[mechanism]()
         except KeyError:
             raise ValueError(f"Mechanism: unknown mechanism '{mechanism}.'")
 
-    
-    def __repr__(self):
-        return str(self.__profile)
+        return projects, self.__profile.statistics(projects)
 
 
 if __name__ == '__main__':
     from approval_profile import Profile
 
     profile = Profile("data/poland_warszawa_2018_praga-poludnie.pb")
-    test = Mechanism(profile)
+    mechanism = Mechanism(profile)
 # %%

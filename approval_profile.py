@@ -10,11 +10,17 @@ class Profile():
         self._metadata = {}
         self._projects = {}
         self._votes = {}
-        with open(filename, "r", encoding="utf8") as self.file:
-            self.__read_lines()
+
+        # cant pickle file object
+        with open(filename, "r", encoding="utf8") as f:
+            self.__read_lines(f)
 
         self.__convert_projects()
         self.__convert_votes()
+
+
+    def __repr__(self):
+        return str(self._metadata)
 
         
     @property
@@ -53,7 +59,7 @@ class Profile():
             self._ballots[i,vote] = 1
 
        
-    def __read_lines(self):
+    def __read_lines(self, f):
         _sections = {"META":self._metadata, 
                      "PROJECTS":self._projects, 
                      "VOTES":self._votes}
@@ -61,7 +67,7 @@ class Profile():
                    "project_id":"cost",
                    "voter_id":"vote"}
         
-        for line in self.file:
+        for line in f:
             line = line.strip()
 
             items = line.split(";")
@@ -94,11 +100,42 @@ class Profile():
                 _current[key] = items[index]
 
 
-    def __repr__(self):
-        return str(self._metadata)
+    def statistics(self, projects):
+        approvals = 0
+        cost = sum(self.projects[projects])
+        budget_percentage = cost / self.budget
+
+        for votes in self._votes:
+            for project in projects:
+                if project in votes:
+                    approvals += 1
+                    break
+
+        approval_percentage = approvals / len(self._votes)
+
+        statistics = {
+            "cost": cost,
+            "budget_percentage": budget_percentage,
+            "approvals": approvals,
+            "approval_percentage": approval_percentage
+        }
+
+        return statistics
+
+
+    def save(self, path):
+        with open(path, "wb") as f:
+            pickle.dump(self, f)
+
+    
+    @staticmethod
+    def load(path):
+        with open(path, "rb") as f:
+            return pickle.load(f)
 
 
 if __name__ == '__main__':
+    path = "data/profiles/"
     test = Profile("data/poland_warszawa_2018_praga-poludnie.pb")
 
 # %%
