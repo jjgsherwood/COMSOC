@@ -28,7 +28,7 @@ class Mechanism():
 
     
     def __repr__(self):
-        return self.__profile
+        return str(self.__profile)
 
 
 

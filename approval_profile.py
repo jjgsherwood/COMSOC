@@ -89,8 +89,8 @@ class Profile():
                 _current[key] = items[index]
 
 
-    # def __repr__(self):
-    #     return str(self._metadata)
+    def __repr__(self):
+        return str(self._metadata)
 
 
 if __name__ == '__main__':
