@@ -38,8 +38,7 @@ class Mechanism():
 
         for project, (cost, _) in sorted(projects, key=lambda x: (x[1][1], x[1][0], x[0]), reverse=True):
             if budget - cost < 0:
-                break
-            
+                break  
             solution.append(project)
             budget -= cost
 
@@ -60,4 +59,5 @@ if __name__ == '__main__':
 
     profile = Profile("data/poland_warszawa_2018_praga-poludnie.pb")
     mechanism = Mechanism(profile)
+
 # %%
