@@ -23,6 +23,11 @@ class Profile():
 
 
     @property
+    def approvals(self):
+        return sum(self._ballots)
+
+
+    @property
     def budget(self):
         return float(self._metadata["budget"].replace(",", "."))
 
@@ -97,4 +102,3 @@ if __name__ == '__main__':
     test = Profile("data/poland_warszawa_2018_praga-poludnie.pb")
 
 # %%
-
