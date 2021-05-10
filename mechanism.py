@@ -51,7 +51,7 @@ class Mechanism():
         except KeyError:
             raise ValueError(f"Mechanism: unknown mechanism '{mechanism}.'")
 
-        return projects, self.__profile.statistics(projects)
+        return projects
 
 
 if __name__ == '__main__':

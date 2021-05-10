@@ -100,28 +100,23 @@ class Profile():
                 _current[key] = items[index]
 
 
-    def statistics(self, projects):
-        approvals = 0
-        cost = sum(self.projects[projects])
-        budget_percentage = cost / self.budget
-
+    def get_approval_percentage(self, projects):
         for votes in self._votes:
-            for project in projects:
-                if project in votes:
-                    approvals += 1
-                    break
+                    for project in projects:
+                        if project in votes:
+                            approvals += 1
+                            break
 
-        approval_percentage = approvals / len(self._votes)
+        return approvals / len(self._votes)
 
-        statistics = {
-            "cost": cost,
-            "budget_percentage": budget_percentage,
-            "approvals": approvals,
-            "approval_percentage": approval_percentage
-        }
 
-        return statistics
+    def get_cost(self, projects):
+        return sum(self.projects[projects])
 
+
+    def get_budget_percentage(self, projects):
+        return self.get_cost(projects) / self.budget
+        
 
     def save(self, path):
         with open(path, "wb") as f:
