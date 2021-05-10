@@ -1,5 +1,4 @@
 # %%
-
 import numpy as np
 import pickle
 from pylab import rcParams
@@ -116,7 +115,7 @@ class Profile():
 
     def get_budget_percentage(self, projects):
         return self.get_cost(projects) / self.budget
-        
+
 
     def save(self, path):
         with open(path, "wb") as f:
