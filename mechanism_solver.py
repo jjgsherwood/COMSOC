@@ -1,5 +1,5 @@
 
-class FeasibleSets():
+class MechanismSolver():
     """
     Class for computing feasible subsets. 
     """
@@ -9,4 +9,11 @@ class FeasibleSets():
         self.__costs = costs
         self.__budget = budget
 
-        self.feasible_sets = dict()
+        self.evaluated_sets = dict()
+
+        self.heuristic = None
+        self.cost_fn = None
+
+
+    def solve():
+        pass
