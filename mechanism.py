@@ -1,5 +1,6 @@
 # %%
 import numpy as np
+from mechanism_solver import MechanismSolver
 
 class Mechanism():
     """
@@ -28,12 +29,12 @@ class Mechanism():
 
 
     def __max_approval(self):
-        raise NotImplementedError()
+        return MechanismSolver(profile, 'max_approval')()
 
 
     def __greedy_approval(self):
         solution = []
-        projects = enumerate(zip(self.__profile.projects, self.__profile.approvals))
+        projects = enumerate(zip(self.__profile.costs, self.__profile.approvals))
         budget = self.__profile.budget
 
         for project, (cost, _) in sorted(projects, key=lambda x: (x[1][1], x[1][0], x[0]), reverse=True):
@@ -60,6 +61,13 @@ if __name__ == '__main__':
     # profile = Profile("data/poland_warszawa_2018_praga-poludnie.pb")
     profile = Profile_Synthetic()
     mechanism = Mechanism(profile)
-    print(mechanism.solve())
+    projects = mechanism.solve('max_approval')
+    print(projects)
+    print("approval:", profile.get_approval_percentage(projects))
+    print("budget:", profile.get_budget_percentage(projects))
+    projects = mechanism.solve()
+    print(projects)
+    print("approval:", profile.get_approval_percentage(projects))
+    print("budget:", profile.get_budget_percentage(projects))
 
 # %%

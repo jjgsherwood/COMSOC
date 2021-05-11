@@ -169,7 +169,7 @@ class Profile():
 
     @property
     def approvals(self):
-        return sum(self._ballots)
+        return np.sum(self._ballots, 0)
 
 
     @property
@@ -178,7 +178,7 @@ class Profile():
 
 
     @property
-    def projects(self):
+    def costs(self):
         return np.array([x[1] for x in sorted(self._projects.items(), key=lambda x: x[0])])
 
 
@@ -240,17 +240,16 @@ class Profile():
 
 
     def get_approval_percentage(self, projects):
-        for votes in self._votes:
-            for project in projects:
-                if project in votes:
-                    approvals += 1
-                    break
+        ballots_sliced = self._ballots[:,np.array(projects)]
 
-        return approvals / len(self._votes)
+        print(np.sum(np.sum(ballots_sliced, 1).astype(bool)))
+        print(np.sum(ballots_sliced))
+
+        return np.mean(np.sum(ballots_sliced, 1).astype(bool))
 
 
     def get_cost(self, projects):
-        return sum(self.projects[projects])
+        return sum(self.costs[np.array(projects)])
 
 
     def get_budget_percentage(self, projects):
@@ -273,7 +272,7 @@ class Profile_Synthetic(Profile):
                  voters_per_cluster=list(range(1500, 100, -100)),
                  budget_distribution=normal,
                  loc = 5000,
-                 scale = 1000,
+                 scale = 2000,
                  **kwargs):
         self._clusters = Cluster_Generator(voters_per_cluster, votes_per_project, **kwargs)()
         self._projects = self.__project_generator(votes_per_project, budget_distribution=budget_distribution, loc=loc, scale=scale, **kwargs)
