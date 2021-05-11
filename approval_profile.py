@@ -101,10 +101,10 @@ class Profile():
 
     def get_approval_percentage(self, projects):
         for votes in self._votes:
-                    for project in projects:
-                        if project in votes:
-                            approvals += 1
-                            break
+            for project in projects:
+                if project in votes:
+                    approvals += 1
+                    break
 
         return approvals / len(self._votes)
 
