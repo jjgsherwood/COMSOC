@@ -38,7 +38,7 @@ class Mechanism():
 
         for project, (cost, _) in sorted(projects, key=lambda x: (x[1][1], x[1][0], x[0]), reverse=True):
             if budget - cost < 0:
-                continue  
+                continue
             solution.append(project)
             budget -= cost
 
@@ -55,9 +55,11 @@ class Mechanism():
 
 
 if __name__ == '__main__':
-    from approval_profile import Profile
+    from approval_profile import *
 
-    profile = Profile("data/poland_warszawa_2018_praga-poludnie.pb")
+    # profile = Profile("data/poland_warszawa_2018_praga-poludnie.pb")
+    profile = Profile_Synthetic()
     mechanism = Mechanism(profile)
+    print(mechanism.solve())
 
 # %%

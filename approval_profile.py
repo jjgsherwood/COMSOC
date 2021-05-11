@@ -7,128 +7,8 @@ from pylab import rcParams
 from collections import Counter
 from datetime import date
 
-class Profile():
-    def __init__(self, filename):
-        self._metadata = {}
-        self._projects = {}
-        self._votes = {}
-
-        # cant pickle file object
-        with open(filename, "r", encoding="utf8") as f:
-            self.__read_lines(f)
-
-        self.__convert_projects()
-        self.__convert_votes()
-
-
-    def __repr__(self):
-        return str(self._metadata)
-
-
-    @property
-    def ballots(self):
-        return self._ballots
-
-
-    @property
-    def approvals(self):
-        return sum(self._ballots)
-
-
-    @property
-    def budget(self):
-        return float(self._metadata["budget"].replace(",", ".")) if isinstance(self._metadata["budget"], str) else self._metadata["budget"]
-
-
-    @property
-    def projects(self):
-        return np.array([x[1] for x in sorted(self._projects.items(), key=lambda x: x[0])])
-
-
-    def __convert_projects(self):
-        self._projectid_to_index = {}
-        tmp = {}
-        for i, (proj_id, budget) in enumerate(self._projects.items()):
-            self._projectid_to_index[proj_id] = i
-            tmp[i] = budget
-        self._projects = tmp
-
-
-    def __convert_votes(self):
-        self._votes = [np.array([self._projectid_to_index[x]]) if isinstance(x, int) else np.array([self._projectid_to_index[int(y)] for y in x.split(",")]) for x in self._votes.values()]
-        self._ballots = np.zeros((self._metadata["num_votes"], self._metadata["num_projects"]))
-        for i, vote in enumerate(self._votes):
-            self._ballots[i,vote] = 1
-
-
-    def __read_lines(self, f):
-        _sections = {"META":self._metadata,
-                     "PROJECTS":self._projects,
-                     "VOTES":self._votes}
-        _slices = {"key":"value",
-                   "project_id":"cost",
-                   "voter_id":"vote"}
-
-        for line in f:
-            line = line.strip()
-
-            items = line.split(";")
-            # find the right index for one of the properties (value, cost, vote)
-            try:
-                index = items.index(_slices[items[0]])
-            except KeyError:
-                pass
-            else:
-                continue
-
-            # switch to a new dict when a new section is found
-            try:
-                _current = _sections[line]
-            except KeyError:
-                pass
-            else:
-                continue
-
-            # read data
-            try:
-                try:
-                    key = int(items[0])
-                except ValueError:
-                    key = items[0]
-                _current[key] = int(items[index])
-            except IndexError:
-                pass
-            except ValueError:
-                _current[key] = items[index]
-
-
-    def get_approval_percentage(self, projects):
-        for votes in self._votes:
-            for project in projects:
-                if project in votes:
-                    approvals += 1
-                    break
-
-        return approvals / len(self._votes)
-
-
-    def get_cost(self, projects):
-        return sum(self.projects[projects])
-
-
-    def get_budget_percentage(self, projects):
-        return self.get_cost(projects) / self.budget
-
-
-    def save(self, path):
-        with open(path, "wb") as f:
-            pickle.dump(self, f)
-
-
-    @staticmethod
-    def load(path):
-        with open(path, "rb") as f:
-            return pickle.load(f)
+def normal(loc=0, scale=1, size=None, **kwargs):
+    return random.normal(loc, scale, size)
 
 class Cluster():
     def __init__(self, ballots):
@@ -264,30 +144,154 @@ class Cluster_Generator():
     def __call__(self):
         return self.make_clusters()
 
+class Profile():
+    def __init__(self, filename):
+        self._metadata = {}
+        self._projects = {}
+        self._votes = {}
+
+        # cant pickle file object
+        with open(filename, "r", encoding="utf8") as f:
+            self.__read_lines(f)
+
+        self.__convert_projects()
+        self.__convert_votes()
+
+
+    def __repr__(self):
+        return str(self._metadata)
+
+
+    @property
+    def ballots(self):
+        return self._ballots
+
+
+    @property
+    def approvals(self):
+        return sum(self._ballots)
+
+
+    @property
+    def budget(self):
+        return float(self._metadata["budget"].replace(",", ".")) if isinstance(self._metadata["budget"], str) else self._metadata["budget"]
+
+
+    @property
+    def projects(self):
+        return np.array([x[1] for x in sorted(self._projects.items(), key=lambda x: x[0])])
+
+
+    def __convert_projects(self):
+        self._projectid_to_index = {}
+        tmp = {}
+        for i, (proj_id, budget) in enumerate(self._projects.items()):
+            self._projectid_to_index[proj_id] = i
+            tmp[i] = budget
+        self._projects = tmp
+
+
+    def __convert_votes(self):
+        self._votes = [np.array([self._projectid_to_index[x]]) if isinstance(x, int) else np.array([self._projectid_to_index[int(y)] for y in x.split(",")]) for x in self._votes.values()]
+        self._ballots = np.zeros((self._metadata["num_votes"], self._metadata["num_projects"]))
+        for i, vote in enumerate(self._votes):
+            self._ballots[i,vote] = 1
+
+
+    def __read_lines(self, f):
+        _sections = {"META":self._metadata,
+                     "PROJECTS":self._projects,
+                     "VOTES":self._votes}
+        _slices = {"key":"value",
+                   "project_id":"cost",
+                   "voter_id":"vote"}
+
+        for line in f:
+            line = line.strip()
+
+            items = line.split(";")
+            # find the right index for one of the properties (value, cost, vote)
+            try:
+                index = items.index(_slices[items[0]])
+            except KeyError:
+                pass
+            else:
+                continue
+
+            # switch to a new dict when a new section is found
+            try:
+                _current = _sections[line]
+            except KeyError:
+                pass
+            else:
+                continue
+
+            # read data
+            try:
+                try:
+                    key = int(items[0])
+                except ValueError:
+                    key = items[0]
+                _current[key] = int(items[index])
+            except IndexError:
+                pass
+            except ValueError:
+                _current[key] = items[index]
+
+
+    def get_approval_percentage(self, projects):
+        for votes in self._votes:
+            for project in projects:
+                if project in votes:
+                    approvals += 1
+                    break
+
+        return approvals / len(self._votes)
+
+
+    def get_cost(self, projects):
+        return sum(self.projects[projects])
+
+
+    def get_budget_percentage(self, projects):
+        return self.get_cost(projects) / self.budget
+
+
+    def save(self, path):
+        with open(path, "wb") as f:
+            pickle.dump(self, f)
+
+
+    @staticmethod
+    def load(path):
+        with open(path, "rb") as f:
+            return pickle.load(f)
+
 class Profile_Synthetic(Profile):
     def __init__(self,
                  votes_per_project=list(range(5000, 1500, -300)),
                  voters_per_cluster=list(range(1500, 100, -100)),
+                 budget_distribution=normal,
+                 loc = 5000,
+                 scale = 1000,
                  **kwargs):
         self._clusters = Cluster_Generator(voters_per_cluster, votes_per_project, **kwargs)()
-        self._projects = self.__project_generator(votes_per_project, **kwargs)
-        self._metadata = self.__create_metadata(votes_per_project, **kwargs)
-        self._votes = {i:ballot for cluster in self._clusters for i, ballot in enumerate(cluster)}
+        self._projects = self.__project_generator(votes_per_project, budget_distribution=budget_distribution, loc=loc, scale=scale, **kwargs)
+        self._metadata = self.__create_metadata(votes_per_project, budget_distribution=budget_distribution, loc=loc, scale=scale, **kwargs)
+        self._ballots = np.array([ballot for cluster in self._clusters for ballot in cluster])
 
     @property
-    def projects(self):
-        return self._projects
+    def clusters(self):
+        return self._clusters
 
-    def __project_generator(self, votes_per_project, budget_distribution=random.normal, loc = 5000, scale = 1000, **kwargs):
-        return {i:budget_distribution(**kwargs) for i in range(len(votes_per_project))}
+    def __project_generator(self, votes_per_project, **kwargs):
+        return {i:kwargs['budget_distribution'](**kwargs) for i in range(len(votes_per_project))}
 
     def __create_metadata(self, votes_per_project, **kwargs):
         if 'budget' in kwargs:
             budget = kwargs['budget']
-        elif 'budget_distribution' in kwargs:
-            budget = kwargs['budget_distribution'](**kwargs) * len(votes_per_project) / 4
         else:
-            budget = random.normal(loc=5000, scale=1000) * len(votes_per_project) / 4
+            budget = kwargs['budget_distribution'](**kwargs) * len(votes_per_project) / 3
         budget = np.round(budget, 2)
 
         return {'description': 'Synthetic data',
