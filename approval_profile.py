@@ -34,7 +34,7 @@ class Profile():
 
     @property
     def budget(self):
-        return float(self._metadata["budget"].replace(",", "."))
+        return float(self._metadata["budget"].replace(",", ".")) if isinstance(self._metadata["budget"], str) else self._metadata["budget"]
 
     
     @property
