@@ -15,6 +15,4 @@ class ELBO():
 def reparamaterize(mu, log_std):
     return torch.exp(log_std)*torch.randn_like(mu) + mu
 
-
-
 # %%

@@ -17,8 +17,8 @@ class ApprovalVAE(nn.Module):
     def forward(self, x):
         mu, log_std = torch.chunk(self.encoder(x), 2, 1)
         samples = reparamaterize(mu, log_std).to(x.device)
-        logits = self.act_fn(self.decoder(samples))
-        
+        logits = self.decoder(samples)
+
         return logits, mu, log_std
 
 

@@ -15,16 +15,13 @@ def train(dataloader, model, criterion, optimizer, device, iters=1):
     for i in range(iters):
         for batch in dataloader:
             batch = batch.to(device)
-            print(batch)
             optimizer.zero_grad()
 
             logits, mu, log_std = model(batch)
             loss = criterion(logits, batch, mu, log_std)
-            print(loss.item())
+            print(model.decoder.MLP[0].weight)
             loss.backward()
             optimizer.step()
-            break
-
 
 def main(**kwargs):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -37,7 +34,7 @@ def main(**kwargs):
     dataset = ApprovalDataset(profile)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
-    model = ApprovalVAE(dataset.get_data_dim, 2, hidden_dims=[8]).to(device)
+    model = ApprovalVAE(dataset.get_data_dim, 128, hidden_dims=[8]).to(device)
 
     print(model)
 
