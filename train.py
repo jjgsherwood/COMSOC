@@ -27,8 +27,11 @@ def train(dataloader, model, criterion, optimizer, device, epochs=1, verbatim=Fa
             loss.backward()
             optimizer.step()
 
-            if (verbatim and not i % iter_interval) or (not i and not epoch):
+            if verbatim and not i % iter_interval:
                 print(f"Epoch {epoch}, iter {i} - Loss: {loss.item()}")
+
+            if not (i or epoch):
+                print(f"Initital loss: {loss}")
 
         print(f"Epoch {epoch} - Loss: {loss.item()}")
 
@@ -37,7 +40,7 @@ def main(**kwargs):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     batch_size = 8
-    lr = 0.00002
+    lr = 0.00001
     shuffle = True
     
     profile = Profile_Synthetic()
