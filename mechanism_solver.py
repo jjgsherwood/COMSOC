@@ -16,10 +16,12 @@ class MechanismSolver():
         }
         self.__mechanisms[mechanism]()
 
+
     def __max_approval(self):
         max_approval_per_budget = sorted(self.__approvals / self.__costs,reverse=True)[0]
         self.args = [max_approval_per_budget, self.__budget]
         self.Path = Path_Max_Approval
+
 
     def solve(self):
         start = self.Path(*self.args)
@@ -58,9 +60,9 @@ class MechanismSolver():
 
         return None
 
+
     def __call__(self):
         return self.solve()
-
 
 
 class Path():
@@ -70,6 +72,7 @@ class Path():
         self.current_gain = 0
         self.expected_max_gain = self.heuristic()
 
+
     def add_project(self, project_id, cost, approval):
         new = copy.deepcopy(self)
         new.projects.add(project_id)
@@ -78,34 +81,45 @@ class Path():
         new.expected_max_gain = new.heuristic(project_id=project_id, cost=cost, approval=approval)
         return new
 
+
     def cost_fn(self, cost):
         self.remaining_budget -= cost
+
 
     def heuristic(self, **kwargs):
         raise NotImplementedError
 
+
     def gain_fn(self, approval, **kwargs):
         raise NotImplementedError
+
 
     def __lt__(self, other):
         return self.current_gain + self.expected_max_gain < other.current_gain + other.expected_max_gain
 
+
     def __eq__(self, other):
         return self.projects == other.projects
+
 
     def __hash__(self):
         return hash(tuple(sorted(self.projects)))
 
+
     def __repr__(self):
         return str(self.projects)
+
+
 
 class Path_Max_Approval(Path):
     def __init__(self, max_approval_per_budget, *args):
         self.max_approval_per_budget = max_approval_per_budget
         super().__init__(*args)
 
+
     def heuristic(self, **kwargs):
         return self.remaining_budget * self.max_approval_per_budget
+
 
     def gain_fn(self, approval, **kwargs):
         self.current_gain += approval

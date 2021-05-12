@@ -63,10 +63,12 @@ if __name__ == '__main__':
     mechanism = Mechanism(profile)
     projects = mechanism.solve('max_approval')
     print(projects)
+    print("max approval:")
     print("approval:", profile.get_approval_percentage(projects))
     print("budget:", profile.get_budget_percentage(projects))
     projects = mechanism.solve()
     print(projects)
+    print("greedy:")
     print("approval:", profile.get_approval_percentage(projects))
     print("budget:", profile.get_budget_percentage(projects))
 
