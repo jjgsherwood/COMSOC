@@ -5,20 +5,20 @@ import torch.nn.functional as F
 
 from vae_utils import reparamaterize
 
+
 class ApprovalVAE(nn.Module):
     def __init__(self, input_dim, latent_dim, hidden_dims=[75,50,25]):
         super(ApprovalVAE, self).__init__()
 
         self.encoder = LinearMLP(input_dim, latent_dim*2, hidden_dims=hidden_dims)
         self.decoder = LinearMLP(latent_dim, input_dim, hidden_dims=hidden_dims[::-1])
-
         self.act_fn = torch.sigmoid
+
 
     def forward(self, x):
         mu, log_std = torch.chunk(self.encoder(x), 2, 1)
         samples = reparamaterize(mu, log_std).to(x.device)
         logits = self.decoder(samples)
-
         return logits, mu, log_std
 
 
@@ -35,10 +35,10 @@ class LinearMLP(nn.Module):
             layers.append(self.act_fn)
         layers.append(nn.Linear(in_features=hidden_dims[-1], out_features=output_dim))
 
-        self.MLP = nn.Sequential(*layers)
+        self.net = nn.Sequential(*layers)
 
     def forward(self, x):
-        return self.MLP(x)
+        return self.net(x)
 
 
 if __name__ == "__main__":
