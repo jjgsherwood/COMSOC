@@ -7,7 +7,7 @@ from vae_utils import reparamaterize
 
 
 class ApprovalVAE(nn.Module):
-    def __init__(self, input_dim, latent_dim, hidden_dims=[75,50,25]):
+    def __init__(self, input_dim=12, latent_dim=2, hidden_dims=[75,50,25]):
         super(ApprovalVAE, self).__init__()
 
         self.encoder = LinearMLP(input_dim, latent_dim*2, hidden_dims=hidden_dims)
@@ -20,6 +20,23 @@ class ApprovalVAE(nn.Module):
         samples = reparamaterize(mu, log_std).to(x.device)
         logits = self.decoder(samples)
         return logits, mu, log_std
+
+
+    def reconstruct(self, x):
+        with torch.no_grad():
+            logits, *_ = self(x)
+        return torch.sigmoid(logits)
+
+    
+    def save(self, path):
+        torch.save(self, path)
+
+    
+    @staticmethod
+    def load(path):
+        model = torch.load(path)
+        model.eval()
+        return model
 
 
 class LinearMLP(nn.Module):
