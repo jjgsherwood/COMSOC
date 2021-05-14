@@ -2,7 +2,7 @@ import copy
 import heapq
 import numpy as np
 
-class MechanismSolver():
+class MechanismAStarSolver():
     """
     Class for computing feasible subsets.
     """
@@ -114,7 +114,6 @@ class Path():
 
     def __repr__(self):
         return str(self.projects)
-
 
 class Path_Max_Approval(Path):
     def __init__(self, max_approval_per_budget, *args):

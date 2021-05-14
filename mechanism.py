@@ -1,6 +1,6 @@
 # %%
 import numpy as np
-from mechanism_solver import MechanismSolver
+from mechanism_solver import MechanismAStarSolver
 
 class Mechanism():
     """
@@ -29,7 +29,7 @@ class Mechanism():
 
 
     def __max_approval(self):
-        return MechanismSolver(self.__profile, 'max_approval')()
+        return MechanismAStarSolver(self.__profile, 'max_approval')()
 
 
     def __greedy_approval(self):
