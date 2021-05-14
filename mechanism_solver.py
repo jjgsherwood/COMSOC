@@ -1,4 +1,6 @@
 import copy
+import heapq
+import numpy as np
 
 class MechanismSolver():
     """
@@ -17,22 +19,30 @@ class MechanismSolver():
         self.__mechanisms[mechanism]()
 
     def __max_approval(self):
-        max_approval_per_budget = sorted(self.__approvals / self.__costs,reverse=True)[0]
+        # find the minimum number of projects that can be approved
+        budget = self.__budget
+        for i, (_, cost) in enumerate(sorted(zip(self.__approvals / self.__costs, self.__costs), reverse=True)):
+            budget -= cost
+            if budget <= cost:
+                break
+        max_approval_per_budget = np.median(sorted(self.__approvals / self.__costs,reverse=True)[:i])
+
         self.args = [max_approval_per_budget, self.__budget]
         self.Path = Path_Max_Approval
 
     def solve(self):
         start = self.Path(*self.args)
-        print(start.expected_max_gain)
+        print('expected max gain', start.expected_max_gain)
         print('budget', self.__budget)
-        print('id, approval, cost, ratio')
-        for id, (cost, approval) in enumerate(zip(self.__costs, self.__approvals)):
-            print(id, '\t', approval,'\t' ,cost, '\t' ,approval/cost)
+        # print('id, approval, cost, ratio')
+        # for id, (cost, approval) in enumerate(zip(self.__costs, self.__approvals)):
+        #     print(id, '\t', approval,'\t' ,cost, '\t' ,approval/cost)
         paths = [start.add_project(id, cost, approval) for id, (cost, approval) in enumerate(zip(self.__costs, self.__approvals))]
-        paths.sort(reverse=True)
+        paths.sort(reverse=False)
         evaluated_sets = set(paths)
+        heapq.heapify(paths)
         while paths:
-            current_path = paths.pop(0)
+            current_path = heapq.heappop(paths)
             if current_path.remaining_budget == 0:
                 return list(current_path.projects)
 
@@ -45,23 +55,18 @@ class MechanismSolver():
                 new_path = current_path.add_project(id, cost, approval)
                 if new_path in evaluated_sets:
                     continue
-
-                paths.append(new_path)
+                heapq.heappush(paths, new_path)
                 evaluated_sets.add(new_path)
 
             if no_more_paths:
                 current_path.remaining_budget = 0
                 current_path.expected_max_gain = 0
-                paths.append(current_path)
-
-            paths.sort(reverse=True)
+                heapq.heappush(paths, new_path)
 
         return None
 
     def __call__(self):
         return self.solve()
-
-
 
 class Path():
     def __init__(self, budget, *args):
@@ -88,7 +93,7 @@ class Path():
         raise NotImplementedError
 
     def __lt__(self, other):
-        return self.current_gain + self.expected_max_gain < other.current_gain + other.expected_max_gain
+        return self.current_gain + self.expected_max_gain >= other.current_gain + other.expected_max_gain
 
     def __eq__(self, other):
         return self.projects == other.projects

@@ -29,7 +29,7 @@ class Mechanism():
 
 
     def __max_approval(self):
-        return MechanismSolver(profile, 'max_approval')()
+        return MechanismSolver(self.__profile, 'max_approval')()
 
 
     def __greedy_approval(self):
@@ -59,15 +59,16 @@ if __name__ == '__main__':
     from approval_profile import *
 
     # profile = Profile("data/poland_warszawa_2018_praga-poludnie.pb")
-    profile = Profile_Synthetic()
+    profile = Profile_Synthetic(list(range(1100, 100, -110)), list(range(250, 10, -30)))
     mechanism = Mechanism(profile)
-    projects = mechanism.solve('max_approval')
-    print(projects)
-    print("approval:", profile.get_approval_percentage(projects))
-    print("budget:", profile.get_budget_percentage(projects))
     projects = mechanism.solve()
     print(projects)
     print("approval:", profile.get_approval_percentage(projects))
     print("budget:", profile.get_budget_percentage(projects))
+    projects = mechanism.solve('max_approval')
+    print(projects)
+    print("approval:", profile.get_approval_percentage(projects))
+    print("budget:", profile.get_budget_percentage(projects))
+
 
 # %%
