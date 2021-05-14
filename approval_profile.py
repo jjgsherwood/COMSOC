@@ -7,8 +7,10 @@ from pylab import rcParams
 from collections import Counter
 from datetime import date
 
+
 def normal(loc=0, scale=1, size=None, **kwargs):
     return random.normal(loc, scale, size)
+
 
 class Cluster():
     def __init__(self, ballots):
@@ -16,22 +18,28 @@ class Cluster():
         self._mean = np.mean(ballots, 0)
         self.n_projects = len(ballots[0])
 
+
     @property
     def ballots(self):
         return self._ballots
+
 
     @property
     def cluster_ballot(self):
         return self._mean
 
+
     def __iter__(self):
         return iter(self._ballots)
+
 
     def __repr__(self):
         return str(self._mean)
 
+
     def __list__(self):
         return list(self._ballots)
+
 
     def statistics(self):
         rcParams['figure.figsize'] = 7, 4
@@ -52,6 +60,7 @@ class Cluster():
         plt.xlabel("Projects")
         plt.ylabel("Change of approving a project(%)")
         plt.show()
+
 
 class Cluster_Generator():
     def __init__(self,
@@ -76,27 +85,33 @@ class Cluster_Generator():
         self.n_clusters = len(self.voters_per_cluster)
         self.rng = random.default_rng()
 
+
     @property
     def size_none_empty_projects(self):
         return len(self.none_empty_projects)
+
 
     @property
     def none_empty_projects(self):
         return np.where(self.votes_per_project != 0)[0]
 
+
     @property
     def votes_per_project_dist(self):
         return self.votes_per_project / sum(self.votes_per_project)
 
+
     @property
     def avg_approvals_per_voter(self):
         return sum(self.votes_per_project) / sum(self.voters_per_cluster)
+
 
     def convert_ballot_to_one_hot(self, ballots):
         new_ballots = np.zeros((len(ballots), self.n_projects))
         for i, vote in enumerate(ballots):
             new_ballots[i,vote] = 1
         return new_ballots
+
 
     def make_clusters(self):
         clusters = []
@@ -117,32 +132,40 @@ class Cluster_Generator():
 
         return clusters
 
+
     def n_projects_in_cluster(self, cluster_size):
         # the lower cluster_independence is the more dependent the number of projects are in therms of clustersize.
         return int(np.clip(random.normal(self.size_none_empty_projects * (cluster_size / self.max_voters_per_cluster), self.cluster_independence, 1), 1, self.size_none_empty_projects))
 
+
     def generate_project_set(self, n_projects_in_cluster):
         return self.rng.choice(self.n_projects, n_projects_in_cluster, p=self.votes_per_project_dist, replace=False, shuffle=False)
+
 
     def approvals_per_voter(self, n_projects_in_cluster, cluster_size):
         # spread_of_approvals determines the spread of approvals per voter within a cluster.
         return np.clip(random.normal(self.avg_approvals_per_voter + 1, self.spread_of_approvals, cluster_size), 1, max(n_projects_in_cluster, 2)).astype(int)
+
 
     def gen_cluster_project_dist(self, project_set):
         # distribution for all projects (small values for non-cluster-projects)
         new_dist = np.maximum(self.votes_per_project_dist[project_set] + random.normal(self.avg_diff_cluster_all_voters_project_dist, self.std_diff_cluster_all_voters_project_dist, len(project_set)), self.noise)
         return new_dist / sum(new_dist)
 
+
     def gen_cluster_project_dist_noise(self, cluster_project_dist, project_set):
         noise_projects = list(set(range(self.n_projects)) - set(project_set))
         cpdn = np.array(list(cluster_project_dist) + list(np.clip(random.gamma(self.noise, 4, len(noise_projects)), 0, 3*self.noise)))
         return cpdn / sum(cpdn), list(project_set) + noise_projects
 
+
     def gen_cluster_ballot(self, project_set, approvals_per_voter, cluster_project_dist):
         return [self.rng.choice(project_set, apv, p=cluster_project_dist, replace=False, shuffle=False) for apv in approvals_per_voter]
 
+
     def __call__(self):
         return self.make_clusters()
+
 
 class Profile():
     def __init__(self, filename):
@@ -279,12 +302,15 @@ class Profile_Synthetic(Profile):
         self._metadata = self.__create_metadata(votes_per_project, budget_distribution=budget_distribution, loc=loc, scale=scale, **kwargs)
         self._ballots = np.array([ballot for cluster in self._clusters for ballot in cluster])
 
+
     @property
     def clusters(self):
         return self._clusters
 
+
     def __project_generator(self, votes_per_project, **kwargs):
         return {i:kwargs['budget_distribution'](**kwargs) for i in range(len(votes_per_project))}
+
 
     def __create_metadata(self, votes_per_project, **kwargs):
         if 'budget' in kwargs:
@@ -310,6 +336,7 @@ class Profile_Synthetic(Profile):
                 'max_sum_cost': budget,
                 'language': 'python',
                 'edition': 1}
+
 
 if __name__ == '__main__':
     path = "data/profiles/"
