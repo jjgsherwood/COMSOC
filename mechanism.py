@@ -1,6 +1,6 @@
 # %%
 import numpy as np
-from mechanism_solver import MechanismAStarSolver
+from mechanism_solver import MechanismAStarSolver, MaxApprovalSolver
 
 class Mechanism():
     """
@@ -19,6 +19,7 @@ class Mechanism():
         self.__profile = profile
 
         self.__mechanisms = {
+            "max_approval_DP": self.__max_approval_DP,
             "max_approval": self.__max_approval,
             "greedy_approval": self.__greedy_approval
         }
@@ -26,6 +27,10 @@ class Mechanism():
 
     def __repr__(self):
         return str(self.__profile)
+
+
+    def __max_approval_DP(self):
+        return MaxApprovalSolver(self.__profile)()
 
 
     def __max_approval(self):
@@ -61,16 +66,22 @@ if __name__ == '__main__':
     # profile = Profile("data/poland_warszawa_2018_praga-poludnie.pb")
     profile = Profile_Synthetic(list(range(1100, 100, -110)), list(range(250, 10, -30)))
     mechanism = Mechanism(profile)
-    projects = mechanism.solve()
+    
+    projects = mechanism.solve('max_approval_DP')
     print(projects)
-    print("max approval:")
+    print("max approval DP:")
     print("approval:", profile.get_approval_percentage(projects))
     print("budget:", profile.get_budget_percentage(projects))
-    projects = mechanism.solve('max_approval')
+    projects = mechanism.solve()
     print(projects)
     print("greedy:")
     print("approval:", profile.get_approval_percentage(projects))
     print("budget:", profile.get_budget_percentage(projects))
-
+    projects = mechanism.solve('max_approval')
+    print(projects)
+    print("max approval:")
+    print("approval:", profile.get_approval_percentage(projects))
+    print("budget:", profile.get_budget_percentage(projects))
+# %%
 
 # %%

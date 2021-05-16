@@ -1,6 +1,64 @@
+# %%
 import copy
 import heapq
 import numpy as np
+
+
+class MaxApprovalSolver():
+    def __init__(self, profile):
+        self.__costs = profile.costs
+        self.__budget = profile.budget
+        self.__approvals = profile.approvals
+
+
+    def solve(self):
+        candidates = self.__candidates()
+        return self.__reconstruct(candidates)
+
+
+    def __candidates(self):
+        b = dict()
+        for k in range(len(self.__costs)):
+            for t in range(int(sum(self.__approvals))):
+                if t == self.__approvals[k] and self.__costs[k] < b.get((k, t), np.inf):
+                    b[(k, t)] = self.__costs[k]
+                p = b.get((k - 1, t), np.inf)
+                q = b.get((k - 1, t - self.__approvals[k]), np.inf) + self.__costs[k]
+                b_min = min(p, q)
+                if b_min < np.inf:
+                    b[(k, t)] = b_min
+        return sorted(b.items(), key=lambda x: (x[0][1], x[1]), reverse=True)
+
+
+    def __reconstruct(self, candidates):
+        solution, viable_candidates = list(), set()
+        optimal_not_found = True
+        optimal_candidate = None
+
+        for candidate, cost in candidates:
+            if cost <= self.__budget and optimal_not_found:
+                print("candidate found:", candidate, cost)
+                optimal_candidate = candidate
+                optimal_not_found = False
+            viable_candidates.add(candidate)
+        
+        if optimal_candidate is None:
+            return None
+
+        item, approval = optimal_candidate
+
+        # reconstruct solution
+        while approval > 0:
+            while (item - 1, approval) in viable_candidates:
+                item -= 1
+            solution.append(item)
+            approval -= self.__approvals[item]
+        return solution
+
+
+    def __call__(self):
+        return self.solve()
+
 
 class MechanismAStarSolver():
     """
@@ -127,3 +185,5 @@ class Path_Max_Approval(Path):
 
     def gain_fn(self, approval, **kwargs):
         self.current_gain += approval
+
+# %%
