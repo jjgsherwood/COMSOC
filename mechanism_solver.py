@@ -40,7 +40,8 @@ class MaxApprovalSolver():
                 print("candidate found:", candidate, cost)
                 optimal_candidate = candidate
                 optimal_not_found = False
-            viable_candidates.add(candidate)
+            if cost <= self.__budget:
+                viable_candidates.add(candidate)
         
         if optimal_candidate is None:
             return None
