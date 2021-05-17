@@ -1,6 +1,6 @@
 # %%
 import numpy as np
-from mechanism_solver import MechanismAStarSolver, MechanismDynamicSolver
+from mechanism_solver import MechanismAStarSolver, MechanismDynamicSolver, MaxApprovalSolver
 from approval_profile import uniform
 
 class Mechanism():
@@ -20,6 +20,7 @@ class Mechanism():
         self.__profile = profile
 
         self.__mechanisms = {
+            "max_approval_DP": self.__max_approval_DP,
             "max_approval": self.__max_approval,
             "greedy_approval": self.__greedy_approval
         }
@@ -27,6 +28,10 @@ class Mechanism():
 
     def __repr__(self):
         return str(self.__profile)
+
+
+    def __max_approval_DP(self):
+        return MaxApprovalSolver(self.__profile)()
 
 
     def __max_approval(self):
@@ -58,21 +63,30 @@ class Mechanism():
 
 if __name__ == '__main__':
     from approval_profile import *
+    import time
 
     # profile = Profile("data/poland_warszawa_2018_praga-poludnie.pb")
     # profile = Profile_Synthetic(list(range(1100, 100, -110)), list(range(250, 10, -30)), budget_distribution=uniform, low=500, high=10000)
-    profile = Profile_Synthetic(list(range(1100, 100, -40)), list(range(250, 10, -10)), budget_distribution=uniform, low=500, high=10000)
+    profile = Profile_Synthetic(list(range(1100, 100, -10)), list(range(250, 10, -10)), budget_distribution=uniform, low=500, high=10000)
     mechanism = Mechanism(profile)
-    projects = mechanism.solve('max_approval')
+    t = time.process_time()
+    projects = mechanism.solve('max_approval_DP')
+    print(f"max approval DP took {-t + time.process_time()}")
     print(projects)
-    print("max approval:")
     print("approval:", profile.get_approval_percentage(projects))
     print("budget:", profile.get_budget_percentage(projects))
+    t = time.process_time()
     projects = mechanism.solve()
+    print(f"Greedy took {-t + time.process_time()}")
     print(projects)
-    print("greedy:")
     print("approval:", profile.get_approval_percentage(projects))
     print("budget:", profile.get_budget_percentage(projects))
-
+    t = time.process_time()
+    projects = mechanism.solve('max_approval')
+    print(f"max approval took {-t + time.process_time()}")
+    print(projects)
+    print("approval:", profile.get_approval_percentage(projects))
+    print("budget:", profile.get_budget_percentage(projects))
+# %%
 
 # %%

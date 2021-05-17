@@ -6,18 +6,19 @@ import torch.optim as optim
 from model import ApprovalVAE
 from approval_dataset import ApprovalDataset
 from approval_profile import Profile_Synthetic
-from vae_utils import ELBO
+from vae_utils import ELBO, visualize
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 
-def train(dataloader, model, criterion, optimizer, device, epochs=1, verbatim=False, iter_interval=100):
+def train(dataloader, model, criterion, optimizer, device, epochs=1, verbatim=False, iter_interval=100, save=False, path="models/model.pth", vis=False):
     model.train()
 
     if verbatim:
         print(model)
 
     for epoch in range(epochs):
+        running_loss = 0
         for i, batch in enumerate(dataloader):
             batch = batch.to(device)
             optimizer.zero_grad()
@@ -29,30 +30,36 @@ def train(dataloader, model, criterion, optimizer, device, epochs=1, verbatim=Fa
 
             if verbatim and not i % iter_interval:
                 print(f"Epoch {epoch}, iter {i} - Loss: {loss.item()}")
+                if vis:
+                    visualize(model, batch)
+            running_loss += loss.item()
 
-            if not (i or epoch):
-                print(f"Initital loss: {loss}")
+        print(f"Epoch {epoch} - Loss: {running_loss / i}")
 
-        print(f"Epoch {epoch} - Loss: {loss.item()}")
+    if save:
+        model.save(path)
 
 
 def main(**kwargs):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    batch_size = 8
-    lr = 0.00001
+    batch_size = 64
+    lr = 0.0001
     shuffle = True
     
     profile = Profile_Synthetic()
     dataset = ApprovalDataset(profile)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
-    model = ApprovalVAE(dataset.get_data_dim, 64, hidden_dims=[8]).to(device)
+    model = ApprovalVAE(dataset.get_data_dim, 4, hidden_dims=[8,6]).to(device)
 
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criterion = ELBO(nn.BCEWithLogitsLoss(reduction='sum'))
 
-    train(dataloader, model, criterion, optimizer, device, epochs=10)
+    train(dataloader, model, criterion, optimizer, device, epochs=10, save=False, verbatim=True, vis=True)
+
+    visualize(model, torch.Tensor(profile.ballots[:40]))
+    
 
     
 if __name__ == "__main__":
