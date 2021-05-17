@@ -58,53 +58,41 @@ class MaxApprovalSolver():
     def __init__(self, profile):
         self.__costs = profile.costs
         self.__budget = profile.budget
-        self.__approvals = profile.approvals
+        self.__approvals = profile.approvals.astype(int)
 
 
     def solve(self):
-        candidates = self.__candidates()
-        return self.__reconstruct(candidates)
+        return self.__max_approval()
 
 
-    def __candidates(self):
+    def __max_approval(self):
         b = dict()
+        sets = dict()
         for k in range(len(self.__costs)):
-            for t in range(int(sum(self.__approvals))):
-                if t == self.__approvals[k] and self.__costs[k] < b.get((k, t), np.inf):
+            print(k)
+            for t in range(sum(self.__approvals)):
+                if t == self.__approvals[k] and self.__costs[k] <= self.__budget and self.__costs[k] < b.get((k, t), np.inf):
                     b[(k, t)] = self.__costs[k]
-                p = b.get((k - 1, t), np.inf)
-                q = b.get((k - 1, t - self.__approvals[k]), np.inf) + self.__costs[k]
-                b_min = min(p, q)
-                if b_min < np.inf:
-                    b[(k, t)] = b_min
-        return sorted(b.items(), key=lambda x: (x[0][1], x[1]), reverse=True)
-
-
-    def __reconstruct(self, candidates):
-        solution, viable_candidates = list(), set()
-        optimal_not_found = True
-        optimal_candidate = None
-
+                    sets[(k, t)] = {k}
+                    continue
+                prev_k = (k - 1, t)
+                prev_kt = (k - 1, t - self.__approvals[k])
+                p = b.get(prev_k, np.inf)
+                q = b.get(prev_kt, np.inf) + self.__costs[k]
+                if p < q and p <= self.__budget:
+                    b[(k, t)] = p
+                    sets[(k, t)] = sets[(prev_k)]
+                elif q <= self.__budget:
+                    b[(k, t)] = q
+                    sets[(k, t)] = set(sets[(prev_kt)]).union({k})
+        
+        candidates = sorted(b.items(), key=lambda x: (x[0][1], x[1]), reverse=True)
         for candidate, cost in candidates:
-            if cost <= self.__budget and optimal_not_found:
-                print("candidate found:", candidate, cost)
-                optimal_candidate = candidate
-                optimal_not_found = False
             if cost <= self.__budget:
-                viable_candidates.add(candidate)
-
-        if optimal_candidate is None:
-            return None
-
-        item, approval = optimal_candidate
-
-        # reconstruct solution
-        while approval > 0:
-            while (item - 1, approval) in viable_candidates:
-                item -= 1
-            solution.append(item)
-            approval -= self.__approvals[item]
-        return solution
+                break
+        else:
+            return []
+        return sorted(list(sets[candidate]))
 
 
     def __call__(self):
