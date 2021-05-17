@@ -1,6 +1,7 @@
 # %%
 import numpy as np
-from mechanism_solver import MechanismAStarSolver
+from mechanism_solver import MechanismAStarSolver, MechanismDynamicSolver
+from approval_profile import uniform
 
 class Mechanism():
     """
@@ -59,14 +60,15 @@ if __name__ == '__main__':
     from approval_profile import *
 
     # profile = Profile("data/poland_warszawa_2018_praga-poludnie.pb")
-    profile = Profile_Synthetic(list(range(1100, 100, -110)), list(range(250, 10, -30)))
+    # profile = Profile_Synthetic(list(range(1100, 100, -110)), list(range(250, 10, -30)), budget_distribution=uniform, low=500, high=10000)
+    profile = Profile_Synthetic(list(range(1100, 100, -40)), list(range(250, 10, -10)), budget_distribution=uniform, low=500, high=10000)
     mechanism = Mechanism(profile)
-    projects = mechanism.solve()
+    projects = mechanism.solve('max_approval')
     print(projects)
     print("max approval:")
     print("approval:", profile.get_approval_percentage(projects))
     print("budget:", profile.get_budget_percentage(projects))
-    projects = mechanism.solve('max_approval')
+    projects = mechanism.solve()
     print(projects)
     print("greedy:")
     print("approval:", profile.get_approval_percentage(projects))

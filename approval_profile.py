@@ -11,6 +11,8 @@ from datetime import date
 def normal(loc=0, scale=1, size=None, **kwargs):
     return random.normal(loc, scale, size)
 
+def uniform(low=0.0, high=1.0, size=None, **kwargs):
+    return random.uniform(low, high, size)
 
 class Cluster():
     def __init__(self, ballots):
@@ -40,6 +42,8 @@ class Cluster():
     def __list__(self):
         return list(self._ballots)
 
+    def __len__(self):
+        return len(self._ballots)
 
     def statistics(self):
         rcParams['figure.figsize'] = 7, 4

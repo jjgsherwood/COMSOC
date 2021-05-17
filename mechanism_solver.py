@@ -2,6 +2,58 @@ import copy
 import heapq
 import numpy as np
 
+class MechanismDynamicSolver():
+    """
+    Class for computing feasible subsets.
+    """
+
+    def __init__(self, profile, mechanism):
+        self.__profile = profile
+        self.__costs = profile.costs
+        self.__budget = profile.budget
+        self.__approvals = profile.approvals
+
+        self.__mechanisms = {
+            "max_approval": self.__max_approval,
+        }
+        self.__mechanisms[mechanism]()
+
+
+    def __max_approval(self):
+        self.__dict = {}
+        self.__i = 0
+
+    def KS(self, n, budget):
+        self.__i += 1
+        if not self.__i % 100:
+            print(self.__i)
+        if n == 0 or budget == 0:
+            return 0, []
+
+        try:
+            tmp = self.__dict[(n, budget)]
+        except KeyError:
+            if self.__costs[n] > budget:
+                tmp = self.KS(n-1, budget)
+                self.__dict[(n-1, budget)] = tmp
+            else:
+                tmp1 = self.KS(n-1, budget)
+                self.__dict[(n-1, budget)] = tmp1
+
+                gain, projects = self.KS(n-1, budget - self.__costs[n])
+                gain += self.__approvals[n]
+                projects += [n]
+                tmp2 = (gain, projects)
+                self.__dict[(n-1, budget - self.__costs[n])] = tmp2
+                tmp = max([tmp1,tmp2], key=lambda x: x[0])
+        return tmp
+
+    def solve(self):
+        return self.KS(len(self.__costs)-1, self.__budget)[1]
+
+    def __call__(self):
+        return self.solve()
+
 class MechanismAStarSolver():
     """
     Class for computing feasible subsets.
@@ -26,7 +78,7 @@ class MechanismAStarSolver():
             budget -= cost
             if budget <= cost:
                 break
-        max_approval_per_budget = np.median(sorted(self.__approvals / self.__costs,reverse=True)[:i])
+        max_approval_per_budget = sorted(self.__approvals / self.__costs,reverse=True)[i-4]
 
         self.args = [max_approval_per_budget, self.__budget]
         self.Path = Path_Max_Approval
@@ -34,7 +86,7 @@ class MechanismAStarSolver():
 
     def solve(self):
         start = self.Path(*self.args)
-        print('expected max gain', start.expected_max_gain)
+        print('expected gain', start.expected_max_gain)
         print('budget', self.__budget)
         # print('id, approval, cost, ratio')
         # for id, (cost, approval) in enumerate(zip(self.__costs, self.__approvals)):
@@ -43,14 +95,20 @@ class MechanismAStarSolver():
         paths.sort(reverse=False)
         evaluated_sets = set(paths)
         heapq.heapify(paths)
+
+        i = 0
         while paths:
             current_path = heapq.heappop(paths)
+            i+=1
+            if not i % 100:
+                print("iteration", i)
             if current_path.remaining_budget == 0:
+                print(len(list(current_path.projects)))
                 return list(current_path.projects)
 
             no_more_paths = True
             for id, (cost, approval) in enumerate(zip(self.__costs, self.__approvals)):
-                if id in current_path.projects or current_path.remaining_budget < cost:
+                if current_path.remaining_budget < cost or id in current_path.projects:
                     continue
 
                 no_more_paths = False
@@ -63,7 +121,7 @@ class MechanismAStarSolver():
             if no_more_paths:
                 current_path.remaining_budget = 0
                 current_path.expected_max_gain = 0
-                heapq.heappush(paths, new_path)
+                heapq.heappush(paths, current_path)
 
         return None
 
@@ -77,11 +135,13 @@ class Path():
         self.remaining_budget = budget
         self.current_gain = 0
         self.expected_max_gain = self.heuristic()
+        self.newest_id = None
 
 
     def add_project(self, project_id, cost, approval):
         new = copy.deepcopy(self)
         new.projects.add(project_id)
+        new.newest_id = project_id
         new.cost_fn(cost)
         new.gain_fn(project_id=project_id, cost=cost, approval=approval)
         new.expected_max_gain = new.heuristic(project_id=project_id, cost=cost, approval=approval)
