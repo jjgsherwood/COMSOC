@@ -66,8 +66,8 @@ if __name__ == '__main__':
     import time
 
     # profile = Profile("data/poland_warszawa_2018_praga-poludnie.pb")
-    # profile = Profile_Synthetic(list(range(1100, 100, -110)), list(range(250, 10, -30)), budget_distribution=uniform, low=500, high=10000)
-    profile = Profile_Synthetic(list(range(1100, 100, -10)), list(range(250, 10, -10)), budget_distribution=uniform, low=500, high=10000)
+    profile = Profile_Synthetic(list(range(1100, 100, -110)), list(range(250, 10, -30)), budget_distribution=uniform, low=500, high=10000)
+    # profile = Profile_Synthetic(list(range(1100, 100, -10)), list(range(250, 10, -10)), budget_distribution=uniform, low=500, high=10000)
     mechanism = Mechanism(profile)
     t = time.process_time()
     projects = mechanism.solve('max_approval_DP')
@@ -87,6 +87,4 @@ if __name__ == '__main__':
     print(projects)
     print("approval:", profile.get_approval_percentage(projects))
     print("budget:", profile.get_budget_percentage(projects))
-# %%
-
 # %%

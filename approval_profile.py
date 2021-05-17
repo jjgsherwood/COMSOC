@@ -3,7 +3,6 @@ import numpy as np
 import pickle
 
 from numpy import random
-from pylab import rcParams
 from collections import Counter
 from datetime import date
 
@@ -75,8 +74,8 @@ class Cluster_Generator():
                  adcavpd=0.0,
                  sdcavpd=0.1,
                  noise=0.01,
-                 **args):
-        self.voters_per_cluster = np.array(sorted(voters_per_cluster, reverse=True))
+                 **kwargs):
+        self.voters_per_cluster = np.array(sorted(voters_per_cluster, reverse=False))
         self.votes_per_project = np.array(votes_per_project)
         self.cluster_independence = cluster_independence
         self.spread_of_approvals = spread_of_approvals
