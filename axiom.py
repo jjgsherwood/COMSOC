@@ -12,7 +12,21 @@ import numpy as np
 from mechanism_solver import MechanismAStarSolver, MechanismDynamicSolver
 from approval_profile import *
 
-def 
+def axiom(projects, ballots, labels, costs, budget):
+    n_clusters = max(labels) + 1
+    clusters = [ballots[labels == i] for i in range(n_clusters)]
+    b = []
+    r = []
+    for cluster in clusters:
+        b.append(np.sum(np.mean(cluster,0)[projects]*costs[projects])/budget)
+        r.append(len(cluster)/len(ballots))
+    b = np.array(b)
+    b /= sum(b)
+    s = 0
+    for x,y in zip(b,r):
+        s += np.abs(x-y)**2
+        print(f"{(x-y):.3f}")
+    print(s)
 
 if __name__ == '__main__':
     # profile = Profile_Synthetic(list(range(60000, 100, -3000)), list(range(10000, 1, -1000)), budget_distribution=uniform, low=500, high=10000)
