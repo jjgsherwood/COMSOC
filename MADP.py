@@ -1,6 +1,7 @@
 # %%
 import numpy as np
 
+############ NOT NEEDED ANYMORE ################
 
 # def max_approval(costs, approvals, budget):
 #     candidates = get_candidates(costs, approvals, budget)
@@ -27,7 +28,7 @@ def max_approval(costs, approvals, budget):
             elif q <= budget:
                 b[(k, t)] = q
                 sets[(k, t)] = set(sets[(prev_kt)]).union({k})
-    
+
     candidates = sorted(b.items(), key=lambda x: (x[0][1], x[1]), reverse=True)
     for candidate, cost in candidates:
         if cost <= budget:
@@ -47,7 +48,7 @@ def max_approval(costs, approvals, budget):
 #             optimal_candidate = candidate
 #             optimal_not_found = False
 #         viable_candidates.add(candidate)
-    
+
 #     if optimal_candidate is None:
 #         return None
 
@@ -60,7 +61,7 @@ def max_approval(costs, approvals, budget):
 #         solution.add(item)
 #         approval -= approvals[item]
 #     return solution
-        
+
 
 if __name__ == "__main__":
     from approval_profile import *

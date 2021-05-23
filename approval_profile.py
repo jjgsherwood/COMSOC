@@ -5,6 +5,7 @@ import pickle
 from numpy import random
 from collections import Counter
 from datetime import date
+import ctypes
 
 
 def normal(loc=0, scale=1, size=None, **kwargs):
@@ -175,6 +176,8 @@ class Profile():
         self._metadata = {}
         self._projects = {}
         self._votes = {}
+        self._embedding = None
+        self._labels = None
 
         # cant pickle file object
         with open(filename, "r", encoding="utf8") as f:
@@ -187,6 +190,35 @@ class Profile():
     def __repr__(self):
         return str(self._metadata)
 
+    @property
+    def labels(self):
+        if getattr(self, '_labels', None) is None:
+            raise ValueError("This profile does not contain an embedding yet!")
+        return self._labels
+
+    @labels.setter
+    def labels(self, new_labels):
+        if getattr(self, '_labels', None) is None:
+            self._labels = new_labels
+        else:
+            a = ctypes.windll.user32.MessageBoxW(0, "Are you sure you want to overwrite the old labels of this profile", "Confirm attribute overwrite", 1)
+            if a == 1:
+                self._labels = new_labels
+
+    @property
+    def embedding(self):
+        if  getattr(self, '_embedding', None) is None:
+            raise ValueError("This profile does not contain an embedding yet!")
+        return self._embedding
+
+    @embedding.setter
+    def embedding(self, new_embedding):
+        if getattr(self, '_embedding', None) is None:
+            self._embedding = new_embedding
+        else:
+            a = ctypes.windll.user32.MessageBoxW(0, "Are you sure you want to overwrite the old embedding of this profile", "Confirm attribute overwrite", 1)
+            if a == 1:
+                self._embedding = new_embedding
 
     @property
     def ballots(self):
@@ -207,6 +239,13 @@ class Profile():
     def costs(self):
         return np.array([x[1] for x in sorted(self._projects.items(), key=lambda x: x[0])])
 
+    @property
+    def n_voters(self):
+        return self._metadata["num_votes"]
+
+    @property
+    def n_projects(self):
+        return self._metadata["num_projects"]
 
     def __convert_projects(self):
         self._projectid_to_index = {}
@@ -215,6 +254,7 @@ class Profile():
             self._projectid_to_index[proj_id] = i
             tmp[i] = budget
         self._projects = tmp
+        self._metadata["num_projects"] = len(tmp)
 
 
     def __convert_votes(self):
@@ -290,7 +330,9 @@ class Profile():
     @staticmethod
     def load(path):
         with open(path, "rb") as f:
-            return pickle.load(f)
+            profile = pickle.load(f)
+            profile._metadata["num_votes"] = len(profile._ballots)
+            return profile
 
 class Profile_Synthetic(Profile):
     def __init__(self,
@@ -302,8 +344,9 @@ class Profile_Synthetic(Profile):
                  **kwargs):
         self._clusters = Cluster_Generator(voters_per_cluster, votes_per_project, **kwargs)()
         self._projects = self.__project_generator(votes_per_project, budget_distribution=budget_distribution, loc=loc, scale=scale, **kwargs)
-        self._metadata = self.__create_metadata(votes_per_project, budget_distribution=budget_distribution, loc=loc, scale=scale, **kwargs)
         self._ballots = np.array([ballot for cluster in self._clusters for ballot in cluster])
+        self._metadata = self.__create_metadata(votes_per_project, budget_distribution=budget_distribution, loc=loc, scale=scale, **kwargs)
+        self._embedding = None
 
 
     @property
@@ -329,7 +372,7 @@ class Profile_Synthetic(Profile):
                 'instance': date.today().year,
                 'district': 'The Meaning of Life',
                 'num_projects': len(self._projects),
-                'num_votes': len(self._clusters),
+                'num_votes': len(self._ballots),
                 'budget': budget,
                 'vote_type': 'approval',
                 'rule': 'random',

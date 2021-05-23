@@ -69,7 +69,6 @@ class MaxApprovalSolver():
         b = dict()
         sets = dict()
         for k in range(len(self.__costs)):
-            print(k)
             for t in range(sum(self.__approvals)):
                 if t == self.__approvals[k] and self.__costs[k] <= self.__budget and self.__costs[k] < b.get((k, t), np.inf):
                     b[(k, t)] = self.__costs[k]
@@ -85,7 +84,7 @@ class MaxApprovalSolver():
                 elif q <= self.__budget:
                     b[(k, t)] = q
                     sets[(k, t)] = set(sets[(prev_kt)]).union({k})
-        
+
         candidates = sorted(b.items(), key=lambda x: (x[0][1], x[1]), reverse=True)
         for candidate, cost in candidates:
             if cost <= self.__budget:
@@ -140,14 +139,9 @@ class MechanismAStarSolver():
         evaluated_sets = set(paths)
         heapq.heapify(paths)
 
-        i = 0
         while paths:
             current_path = heapq.heappop(paths)
-            # i+=1
-            # if not i % 100:
-            #     print("iteration", i)
             if current_path.remaining_budget == 0:
-                print(len(list(current_path.projects)))
                 return list(current_path.projects)
 
             no_more_paths = True
@@ -231,5 +225,7 @@ class Path_Max_Approval(Path):
 
     def gain_fn(self, approval, **kwargs):
         self.current_gain += approval
+
+
 
 # %%

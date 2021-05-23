@@ -1,18 +1,7 @@
-import pickle
-import matplotlib.pyplot as plt
-from pylab import rcParams
-from sklearn.cluster import KMeans, DBSCAN
-from sklearn.mixture import GaussianMixture
-from collections import Counter
-import umap
-import networkx as nx
-from itertools import permutations
-import hdbscan
 import numpy as np
-from mechanism_solver import MechanismAStarSolver, MechanismDynamicSolver
-from approval_profile import *
 
-def axiom(projects, ballots, labels, costs, budget):
+def axiom(projects, profile):
+    ballots, labels, costs, budget = profile.ballots, profile.labels, profile.costs, profile.budget
     n_clusters = max(labels) + 1
     clusters = [ballots[labels == i] for i in range(n_clusters)]
     b = []
@@ -22,27 +11,44 @@ def axiom(projects, ballots, labels, costs, budget):
         r.append(len(cluster)/len(ballots))
     b = np.array(b)
     b /= sum(b)
-    s = 0
+    s = []
     for x,y in zip(b,r):
-        s += np.abs(x-y)**2
-        print(f"{(x-y):.3f}")
-    print(s)
+        s.append((x-y)**2)
+    # print(sorted(s, reverse=True))
+    return np.sqrt(sum(s))
 
 if __name__ == '__main__':
-    # profile = Profile_Synthetic(list(range(60000, 100, -3000)), list(range(10000, 1, -1000)), budget_distribution=uniform, low=500, high=10000)
+    from approval_profile import *
+    from mechanism import *
+    from cluster import *
+    import time
 
-    profile = Profile_Synthetic.load('gen_data//55000_20_liniear.pb')
-    data = profile.ballots
-    old_clusters = profile.clusters
-    old_labels = [j for i,cluster in enumerate(old_clusters) for j in len(cluster)*[i]]
 
-    reducer = umap.UMAP(n_components=4, n_neighbors=100, metric='manhattan')
-    reducer.fit(data)
-    embedding = reducer.transform(data)
+    # profile = Profile("data/poland_warszawa_2018_praga-poludnie.pb")
+    profile = Profile_Synthetic(list(range(4000, 1, -200)), list(range(1000, 1, -50)), budget_distribution=uniform, low=500, high=10000, spread_of_approvals=2.5, sdcavpd=0.3, noise=0.02)
+    # profile = Profile_Synthetic(list(range(1100, 100, -10)), list(range(250, 10, -10)), budget_distribution=uniform, low=500, high=10000)
 
-    n_clusters = len(old_clusters)
-    k = GaussianMixture(n_clusters).fit(embedding)
-    k.labels_ = k.predict(embedding)
+    label_profile(profile)
 
     mechanism = Mechanism(profile)
+    t = time.process_time()
+    projects = mechanism.solve("max_approval_DP")
+    print(f"max approval DP took {-t + time.process_time()}")
+    print(projects)
+    print("approval:", profile.get_approval_percentage(projects))
+    print("budget:", profile.get_budget_percentage(projects))
+    print("axiom score", axiom(projects, profile))
+    t = time.process_time()
+    projects = mechanism.solve()
+    print(f"Greedy took {-t + time.process_time()}")
+    print(projects)
+    print("approval:", profile.get_approval_percentage(projects))
+    print("budget:", profile.get_budget_percentage(projects))
+    print("axiom score", axiom(projects, profile))
+    t = time.process_time()
     projects = mechanism.solve('max_approval')
+    print(f"max approval took {-t + time.process_time()}")
+    print(projects)
+    print("approval:", profile.get_approval_percentage(projects))
+    print("budget:", profile.get_budget_percentage(projects))
+    print("axiom score", axiom(projects, profile))
