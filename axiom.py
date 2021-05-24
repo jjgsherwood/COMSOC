@@ -1,6 +1,6 @@
 import numpy as np
 
-def axiom(projects, profile):
+def axiom(projects, profile, pr=False):
     ballots, labels, costs, budget = profile.ballots, profile.labels, profile.costs, profile.budget
     n_clusters = max(labels) + 1
     clusters = [ballots[labels == i] for i in range(n_clusters)]
@@ -13,9 +13,14 @@ def axiom(projects, profile):
     b /= sum(b)
     s = []
     for x,y in zip(b,r):
-        s.append((x-y)**2)
-    # print(sorted(s, reverse=True))
-    return np.sqrt(sum(s))
+        s.append(np.abs(x-y)**3)
+    if pr:
+        print(sorted(s, reverse=True))
+    x = sum(s)**(1./3.)
+    if np.any(np.isnan(s)) or np.isnan(x):
+        raise ValueError(f"{s}, {x}")
+        return 10
+    return x
 
 if __name__ == '__main__':
     from approval_profile import *

@@ -2,6 +2,209 @@
 import copy
 import heapq
 import numpy as np
+from axiom import axiom
+
+class MechanismMinMaxSolver():
+    def __init__(self, profile, mechanism="greedy"):
+        self.__profile = profile
+        self.__costs = profile.costs
+        self.__budget = profile.budget
+        self.__approvals = profile.approvals
+        self.__ballots = profile.ballots
+
+        self.__projects = []
+        self.__group_fraction = [sum(self.__profile.labels == cluster) / self.__profile.n_voters for cluster in range(max(self.__profile.labels)+1)]
+        self.__group_ballot = [self.__ballots[self.__profile.labels == cluster].mean(0) for cluster in range(len(self.__group_fraction))]
+        self.__group_gain_project = [ballot * self.__costs / self.__budget for ballot in self.__group_ballot]
+
+        self.__mechanisms = {
+            "greedy": self.__greedy_init,
+            "random": self.__random_init
+        }
+        self.__mechanisms[mechanism]()
+
+    def __random_init(self):
+        # initialiseer the projects using greedy approval
+        tmp = copy.copy(list(enumerate(self.__costs)))
+        np.random.shuffle(tmp)
+        for id, cost in tmp:
+            if self.__budget >= cost:
+                self.__projects.append(id)
+                self.__budget -= cost
+
+    def __greedy_init(self):
+        # initialiseer the projects using greedy approval
+        tmp = enumerate(zip(self.__costs, self.__approvals))
+        for id, (cost, _) in sorted(tmp, key=lambda x: (x[1][1], x[1][0], x[0]), reverse=True):
+            if self.__budget >= cost:
+                self.__projects.append(id)
+                self.__budget -= cost
+
+    def __min_max_equitability(self):
+        self.__max_cluster = {i:0 for i in range(len(self.__group_fraction))}
+        for _ in range(5000):
+            self.__optimise_for_cluster(*self.__get_max_equitability_cluster())
+            if 3 in self.__max_cluster.values():
+                if 0 not in self.__max_cluster.values():
+                    break
+                for c in self.__max_cluster:
+                    self.__max_cluster[c] -= 1
+
+        return self.__projects
+
+    def __max_equitability(self):
+        current_gain = [ggp[self.__projects].sum() for ggp in self.__group_gain_project]
+        current_gain /= sum(current_gain)
+        return np.max(np.abs(current_gain - self.__group_fraction))
+
+    def __get_max_equitability_cluster(self):
+        current_gain = [ggp[self.__projects].sum() for ggp in self.__group_gain_project]
+        current_gain /= sum(current_gain)
+        score = current_gain - self.__group_fraction
+        for cluster, value in self.__max_cluster.items():
+            if value != 0:
+                score[cluster] = 0
+        cluster = np.argmax(np.abs(score))
+        # cluster = np.random.choice(list(zip(*sorted(enumerate(np.abs(score)), key=lambda x:x[1], reverse=True)[:3]))[0])
+        return cluster, score[cluster]
+
+    def __get_feasible_projects(self):
+        return [i for i in range(self.__profile.n_projects) if i not in self.__projects and self.__costs[i] <= self.__budget]
+
+    def __get_feasible_set(self, n=0, last_added_project=-1):
+        projects = self.__get_feasible_projects()
+
+        if not projects:
+            yield
+
+        for p1 in projects:
+            if last_added_project > p1:
+                continue
+            self.__projects.append(p1)
+            self.__budget -= self.__costs[p1]
+            yield from self.__get_feasible_set(n+1, p1)
+            p = self.__projects.pop(-1)
+            self.__budget += self.__costs[p1]
+
+    def __optimise_for_cluster(self, cluster, score):
+        # cluster gets to much
+        if score > 0:
+            (re_id1,_), (re_id2,_) = sorted(enumerate(np.abs(self.__group_gain_project[cluster][self.__projects] - score)), key=lambda x: x[1])[:2]
+        else:
+            (re_id1,_), (re_id2,_) = sorted(enumerate(np.abs(self.__group_gain_project[cluster][self.__projects] - score)), key=lambda x: x[1], reverse=True)[:2]
+
+        re_id1, re_id2 = sorted([re_id1, re_id2], reverse=True)
+        remove_project1 = self.__projects.pop(re_id1)
+        remove_project2 = self.__projects.pop(re_id2)
+        self.__budget += self.__costs[remove_project1] + self.__costs[remove_project2]
+
+        new_project = []
+        for _ in self.__get_feasible_set():
+            new_project.append((axiom(self.__projects, self.__profile), tuple(self.__projects)))
+
+        new_projects = []
+        for id in sorted(new_project)[0][1]:
+            if id in self.__projects:
+                continue
+            self.__projects.append(id)
+            self.__budget -= self.__costs[id]
+            new_projects.append(id)
+
+        # nothing changed
+        if set(new_projects) == set([remove_project1, remove_project2]):
+            self.__max_cluster[cluster] += 1
+        # else:
+        #     print(self.__projects, cluster, score, new_projects, remove_project1, remove_project2)
+
+    def solve(self):
+        return self.__min_max_equitability()
+
+    def __call__(self):
+        return self.solve()
+
+class MechanismMinMaxSolver2():
+    def __init__(self, profile):
+        self.__profile = profile
+        self.__costs = profile.costs
+        self.__budget = profile.budget
+        self.__approvals = profile.approvals
+        self.__ballots = profile.ballots
+
+    def __min_max_equitability(self):
+        self.__projects = []
+        self.__group_fraction = [sum(self.__profile.labels == cluster) / self.__profile.n_voters for cluster in range(max(self.__profile.labels)+1)]
+        self.__group_ballot = [self.__ballots[self.__profile.labels == cluster].mean(0) for cluster in range(len(self.__group_fraction))]
+        self.__group_gain_project = [ballot * self.__costs / self.__budget for ballot in self.__group_ballot]
+
+        #initialiseer the projects using greedy approval
+        tmp = enumerate(zip(self.__costs, self.__approvals))
+        for id, (cost, _) in sorted(tmp, key=lambda x: (x[1][1], x[1][0], x[0]), reverse=True):
+            if self.__budget >= cost:
+                self.__projects.append(id)
+                self.__budget -= cost
+
+        self.__max_cluster = {i:0 for i in range(len(self.__group_fraction))}
+        for _ in range(10000):
+            self.__optimise_for_cluster(*self.__get_max_equitability_cluster())
+            if 3 in self.__max_cluster.values():
+                if 0 not in self.__max_cluster.values():
+                    break
+                for c in self.__max_cluster:
+                    self.__max_cluster[c] -= 1
+
+        return self.__projects
+
+    def __max_equitability(self):
+        current_gain = [ggp[self.__projects].sum() for ggp in self.__group_gain_project]
+        current_gain /= sum(current_gain)
+        return np.max(np.abs(current_gain - self.__group_fraction))
+
+    def __get_max_equitability_cluster(self):
+        current_gain = [ggp[self.__projects].sum() for ggp in self.__group_gain_project]
+        current_gain /= sum(current_gain)
+        score = current_gain - self.__group_fraction
+        for cluster, value in self.__max_cluster.items():
+            if value != 0:
+                score[cluster] = 0
+        cluster = np.argmax(np.abs(score))
+        return cluster, score[cluster]
+
+    def __get_feasible_projects(self):
+        return [i for i in range(self.__profile.n_projects) if i not in self.__projects and self.__costs[i] <= self.__budget]
+
+    def __optimise_for_cluster(self, cluster, score):
+
+        # cluster gets to much
+        if score > 0:
+            remove_project_id = np.argmin(np.abs(self.__group_gain_project[cluster][self.__projects] - score))
+        else:
+            remove_project_id = np.argmax(np.abs(self.__group_gain_project[cluster][self.__projects] - score))
+
+        remove_project = self.__projects.pop(remove_project_id)
+        self.__budget += self.__costs[remove_project]
+
+        # while self.__get_feasible_projects():
+        new_project = []
+        for project_id in self.__get_feasible_projects():
+            self.__projects.append(project_id)
+            new_project.append((axiom(self.__projects, self.__profile), project_id))
+            del self.__projects[-1]
+
+        best_project = sorted(new_project)[0][1]
+        self.__projects.append(best_project)
+        self.__budget -= self.__costs[best_project]
+
+        # nothing changed
+        if best_project == remove_project:
+            self.__max_cluster[cluster] += 1
+        # else:
+        #     print(self.__projects, cluster, score, best_project, remove_project)
+
+    def solve(self):
+        return self.__min_max_equitability()
+
+    def __call__(self):
+        return self.solve()
 
 class MechanismDynamicSolver():
     """
