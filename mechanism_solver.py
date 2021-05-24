@@ -65,7 +65,6 @@ class MechanismMinMaxSolver():
             if value != 0:
                 score[cluster] = 0
         cluster = np.argmax(np.abs(score))
-        # cluster = np.random.choice(list(zip(*sorted(enumerate(np.abs(score)), key=lambda x:x[1], reverse=True)[:3]))[0])
         return cluster, score[cluster]
 
     def __get_feasible_projects(self):
@@ -87,12 +86,8 @@ class MechanismMinMaxSolver():
             self.__budget += self.__costs[p1]
 
     def __optimise_for_cluster(self, cluster, score):
-        # cluster gets to much
-        if score > 0:
-            (re_id1,_), (re_id2,_) = sorted(enumerate(np.abs(self.__group_gain_project[cluster][self.__projects] - score)), key=lambda x: x[1])[:2]
-        else:
-            (re_id1,_), (re_id2,_) = sorted(enumerate(np.abs(self.__group_gain_project[cluster][self.__projects] - score)), key=lambda x: x[1], reverse=True)[:2]
-
+        s = list(zip(*sorted(enumerate(np.abs(self.__group_gain_project[cluster][self.__projects] - score)), key=lambda x: x[1])))[0]
+        re_id1, re_id2 = np.random.choice(s[:3], 2, replace=False)
         re_id1, re_id2 = sorted([re_id1, re_id2], reverse=True)
         remove_project1 = self.__projects.pop(re_id1)
         remove_project2 = self.__projects.pop(re_id2)
@@ -173,11 +168,11 @@ class MechanismMinMaxSolver2():
         return [i for i in range(self.__profile.n_projects) if i not in self.__projects and self.__costs[i] <= self.__budget]
 
     def __optimise_for_cluster(self, cluster, score):
-
         # cluster gets to much
         if score > 0:
             remove_project_id = np.argmin(np.abs(self.__group_gain_project[cluster][self.__projects] - score))
         else:
+            # check this
             remove_project_id = np.argmax(np.abs(self.__group_gain_project[cluster][self.__projects] - score))
 
         remove_project = self.__projects.pop(remove_project_id)
@@ -197,8 +192,8 @@ class MechanismMinMaxSolver2():
         # nothing changed
         if best_project == remove_project:
             self.__max_cluster[cluster] += 1
-        # else:
-        #     print(self.__projects, cluster, score, best_project, remove_project)
+        else:
+            print(self.__projects, cluster, score, best_project, remove_project)
 
     def solve(self):
         return self.__min_max_equitability()

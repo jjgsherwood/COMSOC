@@ -16,11 +16,7 @@ def axiom(projects, profile, pr=False):
         s.append(np.abs(x-y)**3)
     if pr:
         print(sorted(s, reverse=True))
-    x = sum(s)**(1./3.)
-    if np.any(np.isnan(s)) or np.isnan(x):
-        raise ValueError(f"{s}, {x}")
-        return 10
-    return x
+    return sum(s)**(1./3.)
 
 if __name__ == '__main__':
     from approval_profile import *

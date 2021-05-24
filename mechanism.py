@@ -44,7 +44,7 @@ class Mechanism():
 
     def __n_random_min_max_equitability(self):
         score = np.inf
-        for _ in range(50):
+        for _ in range(10):
             projects = MechanismMinMaxSolver(self.__profile, "random")()
             new_score = axiom(projects, self.__profile)
             if new_score < score:
@@ -114,7 +114,7 @@ if __name__ == '__main__':
 
     t = time.process_time()
     projects = mechanism.solve("n_random_min_max_equitability")
-    print(f"min max equitability took {-t + time.process_time()}")
+    print(f"n random min max equitability took {-t + time.process_time()}")
     print(projects)
     print("approval:", profile.get_approval_percentage(projects))
     print("budget:", profile.get_budget_percentage(projects))
@@ -148,6 +148,7 @@ if __name__ == '__main__':
     print("budget:", profile.get_budget_percentage(projects))
     print("axiom score", axiom(projects, profile))
     print()
+
     t = time.process_time()
     projects = mechanism.solve()
     print(f"Greedy took {-t + time.process_time()}")

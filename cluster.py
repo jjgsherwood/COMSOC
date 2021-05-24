@@ -46,7 +46,7 @@ def GMM(profile, n_clusters):
     profile.labels = GaussianMixture(n_clusters).fit_predict(profile.embedding)
 
 
-def label_profile(profile, n_clusters=10, n_components=4):
+def label_profile(profile, n_clusters=20, n_components=4):
     data_transform(profile, n_components)
     GMM(profile, n_clusters)
 
