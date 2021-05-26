@@ -5,8 +5,10 @@ import pickle
 from numpy import random
 from collections import Counter
 from datetime import date
-import ctypes
+import tkinter as tk
+from tkinter import messagebox
 
+root = tk.Tk().withdraw()  # hide the root window
 
 def normal(loc=0, scale=1, size=None, **kwargs):
     return random.normal(loc, scale, size)
@@ -201,8 +203,8 @@ class Profile():
         if getattr(self, '_labels', None) is None:
             self._labels = new_labels
         else:
-            a = ctypes.windll.user32.MessageBoxW(0, "Are you sure you want to overwrite the old labels of this profile", "Confirm attribute overwrite", 1)
-            if a == 1:
+            a = messagebox.askyesno("Confirm attribute overwrite", "Are you sure you want to overwrite the old labels of this profile?")
+            if a:
                 self._labels = new_labels
 
     @property
@@ -216,8 +218,8 @@ class Profile():
         if getattr(self, '_embedding', None) is None:
             self._embedding = new_embedding
         else:
-            a = ctypes.windll.user32.MessageBoxW(0, "Are you sure you want to overwrite the old embedding of this profile", "Confirm attribute overwrite", 1)
-            if a == 1:
+            a = messagebox.askyesno("Confirm attribute overwrite", "Are you sure you want to overwrite the old embedding of this profile?")
+            if a:
                 self._embedding = new_embedding
 
     @property
@@ -304,13 +306,18 @@ class Profile():
             except ValueError:
                 _current[key] = items[index]
 
+                
+    def get_utlity_score(self, projects):
+        return (self._ballots[:,np.array(projects)].sum(0) * self.costs[np.array(projects)]).sum()
+
+
+    def get_approval_score(self, projects):
+        ballots_sliced = self._ballots[:,np.array(projects)]
+        return np.sum(ballots_sliced)
+
 
     def get_approval_percentage(self, projects):
         ballots_sliced = self._ballots[:,np.array(projects)]
-
-        print(np.sum(np.sum(ballots_sliced, 1).astype(bool)))
-        print(np.sum(ballots_sliced))
-
         return np.mean(np.sum(ballots_sliced, 1).astype(bool))
 
 

@@ -1,22 +1,36 @@
 import numpy as np
 from scipy.spatial.distance import jensenshannon
 
-def axiom(projects, profile, pr=False):
+def axiom(profile, projects, pr=False):
     ballots, labels, costs, budget = profile.ballots, profile.labels, profile.costs, profile.budget
+    projects = np.array(projects)
+
     n_clusters = max(labels) + 1
     clusters = [ballots[labels == i] for i in range(n_clusters)]
-    b = []
-    r = []
-    for cluster in clusters:
-        b.append(np.sum(np.mean(cluster,0)[projects]*costs[projects]))
-        r.append(len(cluster)/len(ballots))
-    b = np.array(b)
-    b /= sum(b)
+    u = np.array([np.sum(np.mean(cluster, 0)[projects]*costs[projects]) for cluster in clusters])
+    r = np.array([len(cluster) for cluster in clusters]).astype(float)
+    u /= sum(u)
+    r /= len(ballots)
 
-    # # Hellinger distance
-    # return np.sqrt(1 - np.sum(np.sqrt(b * r)))
+    return jensenshannon(u,r)
 
-    return jensenshannon(b,r)
+def weak_axiom(profile, projects):
+    ballots, labels, costs, budget = profile.ballots, profile.labels, profile.costs, profile.budget
+    projects = np.array(projects)
+
+    n_clusters = max(labels) + 1
+    clusters = [ballots[labels == i] for i in range(n_clusters)]
+    clusters_ballot = [cluster.mean(0) for cluster in clusters]
+    group_gain_project = [ballot * costs for ballot in clusters_ballot]
+    u = np.array([np.sum(ballot[projects]*costs[projects]) for ballot in clusters_ballot])
+    r = np.array([len(cluster) for cluster in clusters]).astype(float)
+
+    U_R = sorted(enumerate(u/r), key=lambda x: x[1])
+    for i, (id, u_r) in enumerate(U_R):
+        for cluster, tmp in U_R[i+1:]:
+            if (u[cluster] - max(group_gain_project[cluster][projects])) / r[cluster] > u_r:
+                return 0
+    return 1
 
 if __name__ == '__main__':
     from approval_profile import *

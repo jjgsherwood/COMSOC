@@ -59,4 +59,4 @@ if __name__ == '__main__':
     # profile = Profile_Synthetic(list(range(1100, 100, -10)), list(range(250, 10, -10)), budget_distribution=uniform, low=500, high=10000)
 
     label_profile(profile)
-    print(profile.labels.shape)
+    print(profile.labels)

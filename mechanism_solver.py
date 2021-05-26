@@ -95,7 +95,7 @@ class MechanismMinMaxSolver():
 
         new_project = []
         for _ in self.__get_feasible_set():
-            new_project.append((axiom(self.__projects, self.__profile), tuple(self.__projects)))
+            new_project.append((axiom(self.__profile, self.__projects), tuple(self.__projects)))
 
         new_projects = []
         for id in sorted(new_project)[0][1]:
@@ -182,7 +182,7 @@ class MechanismMinMaxSolver2():
         new_project = []
         for project_id in self.__get_feasible_projects():
             self.__projects.append(project_id)
-            new_project.append((axiom(self.__projects, self.__profile), project_id))
+            new_project.append((axiom(self.__profile, self.__projects), project_id))
             del self.__projects[-1]
 
         best_project = sorted(new_project)[0][1]

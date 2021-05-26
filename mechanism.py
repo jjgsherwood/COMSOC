@@ -43,10 +43,11 @@ class Mechanism():
         return MechanismMinMaxSolver(self.__profile)()
 
     def __n_random_min_max_equitability(self):
-        score = np.inf
-        for _ in range(10):
+        best_projects = MechanismMinMaxSolver(self.__profile)()
+        score = axiom(self.__profile, best_projects)
+        for _ in range(20):
             projects = MechanismMinMaxSolver(self.__profile, "random")()
-            new_score = axiom(projects, self.__profile)
+            new_score = axiom(self.__profile, projects)
             if new_score < score:
                 best_projects = projects
         return best_projects
@@ -101,51 +102,63 @@ if __name__ == '__main__':
     import time
 
     try:
-        profile = Profile_Synthetic.load("test2.pb")
+        profile = Profile_Synthetic.load("test.pb")
     except:
-        profile = Profile("data/poland_warszawa_2018_praga-poludnie.pb")
-        # profile = Profile_Synthetic(list(range(2000, 1, -100)), list(range(1000, 1, -100)), budget_distribution=uniform, low=500, high=10000, spread_of_approvals=2.5, sdcavpd=0.3, noise=0.02)
+        # profile = Profile("data/poland_warszawa_2018_praga-poludnie.pb")
+        profile = Profile_Synthetic(list(range(2000, 1, -100)), list(range(1000, 1, -100)), budget_distribution=uniform, low=500, high=10000, spread_of_approvals=2.5, sdcavpd=0.3, noise=0.02)
         # profile = Profile_Synthetic(list(range(1100, 100, -10)), list(range(250, 10, -10)), budget_distribution=uniform, low=500, high=10000)
 
     label_profile(profile)
-    profile.save("test2.pb")
+    profile.save("test.pb")
 
     mechanism = Mechanism(profile)
 
     t = time.process_time()
     projects = mechanism.solve("n_random_min_max_equitability")
     print(f"n random min max equitability took {-t + time.process_time()}")
-    print(projects)
-    print("approval:", profile.get_approval_percentage(projects))
+    print("elocated projects:", projects)
+    print("total utility:", profile.get_utlity_score(projects))
+    print("total approval:", profile.get_approval_score(projects))
+    print("approval %:", profile.get_approval_percentage(projects))
     print("budget:", profile.get_budget_percentage(projects))
-    print("axiom score", axiom(projects, profile))
+    print("axiom score", axiom(profile, projects))
+    print("satisfies weak axiom", weak_axiom(profile, projects))
     print()
 
     t = time.process_time()
     projects = mechanism.solve("min_max_equitability")
     print(f"min max equitability took {-t + time.process_time()}")
-    print(projects)
-    print("approval:", profile.get_approval_percentage(projects))
+    print("elocated projects:", projects)
+    print("total utility:", profile.get_utlity_score(projects))
+    print("total approval:", profile.get_approval_score(projects))
+    print("approval %:", profile.get_approval_percentage(projects))
     print("budget:", profile.get_budget_percentage(projects))
-    print("axiom score", axiom(projects, profile))
+    print("axiom score", axiom(profile, projects))
+    print("satisfies weak axiom", weak_axiom(profile, projects))
     print()
 
     mechanism = Mechanism(profile)
     t = time.process_time()
     projects = mechanism.solve("max_approval_DP")
     print(f"max approval DP took {-t + time.process_time()}")
-    print(projects)
-    print("approval:", profile.get_approval_percentage(projects))
+    print("elocated projects:", projects)
+    print("total utility:", profile.get_utlity_score(projects))
+    print("total approval:", profile.get_approval_score(projects))
+    print("approval %:", profile.get_approval_percentage(projects))
     print("budget:", profile.get_budget_percentage(projects))
-    print("axiom score", axiom(projects, profile))
+    print("axiom score", axiom(profile, projects))
+    print("satisfies weak axiom", weak_axiom(profile, projects))
     print()
 
     t = time.process_time()
     projects = mechanism.solve()
     print(f"Greedy took {-t + time.process_time()}")
-    print(projects)
-    print("approval:", profile.get_approval_percentage(projects))
+    print("elocated projects:", projects)
+    print("total utility:", profile.get_utlity_score(projects))
+    print("total approval:", profile.get_approval_score(projects))
+    print("approval %:", profile.get_approval_percentage(projects))
     print("budget:", profile.get_budget_percentage(projects))
-    print("axiom score", axiom(projects, profile))
+    print("axiom score", axiom(profile, projects))
+    print("satisfies weak axiom", weak_axiom(profile, projects))
     print()
 # %%
