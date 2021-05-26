@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.spatial.distance import jensenshannon
 
 def axiom(projects, profile, pr=False):
     ballots, labels, costs, budget = profile.ballots, profile.labels, profile.costs, profile.budget
@@ -7,16 +8,15 @@ def axiom(projects, profile, pr=False):
     b = []
     r = []
     for cluster in clusters:
-        b.append(np.sum(np.mean(cluster,0)[projects]*costs[projects])/budget)
+        b.append(np.sum(np.mean(cluster,0)[projects]*costs[projects]))
         r.append(len(cluster)/len(ballots))
     b = np.array(b)
     b /= sum(b)
-    s = []
-    for x,y in zip(b,r):
-        s.append(np.abs(x-y)**3)
-    if pr:
-        print(sorted(s, reverse=True))
-    return sum(s)**(1./3.)
+
+    # # Hellinger distance
+    # return np.sqrt(1 - np.sum(np.sqrt(b * r)))
+
+    return jensenshannon(b,r)
 
 if __name__ == '__main__':
     from approval_profile import *
