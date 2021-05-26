@@ -43,7 +43,10 @@ class MechanismMinMaxSolver():
     def __min_max_equitability(self):
         self.__max_cluster = {i:0 for i in range(len(self.__group_fraction))}
         for _ in range(5000):
-            self.__optimise_for_cluster(*self.__get_max_equitability_cluster())
+            # less then 2 projects are feasible
+            if self.__optimise_for_cluster(*self.__get_max_equitability_cluster()):
+                self.__optimise_for_all_clusters()
+                break
             if 3 in self.__max_cluster.values():
                 if 0 not in self.__max_cluster.values():
                     break
@@ -85,8 +88,21 @@ class MechanismMinMaxSolver():
             p = self.__projects.pop(-1)
             self.__budget += self.__costs[p1]
 
+    def __optimise_for_all_clusters(self):
+        for p in self.__projects:
+            self.__budget += self.__costs[p]
+        self.__projects = []
+
+        new_project = []
+        for _ in self.__get_feasible_set():
+            new_project.append((axiom(self.__profile, self.__projects), tuple(self.__projects)))
+        self.__projects = sorted(new_project)[0][1]
+
     def __optimise_for_cluster(self, cluster, score):
         s = list(zip(*sorted(enumerate(np.abs(self.__group_gain_project[cluster][self.__projects] - score)), key=lambda x: x[1])))[0]
+        if len(s) <= 1:
+            return 1
+
         re_id1, re_id2 = np.random.choice(s[:3], 2, replace=False)
         re_id1, re_id2 = sorted([re_id1, re_id2], reverse=True)
         remove_project1 = self.__projects.pop(re_id1)
