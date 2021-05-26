@@ -46,14 +46,14 @@ class MechanismMinMaxSolver():
             # less then 2 projects are feasible
             if self.__optimise_for_cluster(*self.__get_max_equitability_cluster()):
                 self.__optimise_for_all_clusters()
-                break
+                return self.__projects, 1
             if 3 in self.__max_cluster.values():
                 if 0 not in self.__max_cluster.values():
                     break
                 for c in self.__max_cluster:
                     self.__max_cluster[c] -= 1
 
-        return self.__projects
+        return self.__projects, 0
 
     def __max_equitability(self):
         current_gain = [ggp[self.__projects].sum() for ggp in self.__group_gain_project]
