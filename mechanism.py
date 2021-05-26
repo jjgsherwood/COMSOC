@@ -40,13 +40,19 @@ class Mechanism():
         return MechanismAStarSolver(self.__profile, 'max_approval')()
 
     def __min_max_equitability(self):
-        return MechanismMinMaxSolver(self.__profile)()
+        return MechanismMinMaxSolver(self.__profile)()[0]
 
     def __n_random_min_max_equitability(self):
-        best_projects = MechanismMinMaxSolver(self.__profile)()
+        best_projects, error = MechanismMinMaxSolver(self.__profile)()
         score = axiom(self.__profile, best_projects)
+        if error:
+            return best_projects
+
         for _ in range(20):
-            projects = MechanismMinMaxSolver(self.__profile, "random")()
+            projects, error = MechanismMinMaxSolver(self.__profile, "random")()
+            if error:
+                return projects
+                
             new_score = axiom(self.__profile, projects)
             if new_score < score:
                 best_projects = projects
