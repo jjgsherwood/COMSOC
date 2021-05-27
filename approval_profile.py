@@ -338,7 +338,7 @@ class Profile():
     def load(path):
         with open(path, "rb") as f:
             profile = pickle.load(f)
-            profile._projects = {k:np.abs(v)+1 for k,v in profile._projects}
+            profile._projects = {k:np.abs(v)+1 for k,v in profile._projects.items()}
             profile._metadata["num_votes"] = len(profile._ballots)
             return profile
 
