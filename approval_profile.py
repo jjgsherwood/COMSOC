@@ -306,7 +306,7 @@ class Profile():
             except ValueError:
                 _current[key] = items[index]
 
-                
+
     def get_utlity_score(self, projects):
         return (self._ballots[:,np.array(projects)].sum(0) * self.costs[np.array(projects)]).sum()
 
@@ -338,6 +338,7 @@ class Profile():
     def load(path):
         with open(path, "rb") as f:
             profile = pickle.load(f)
+            profile._projects = {k:np.abs(v)+1 for k,v in profile._projects}
             profile._metadata["num_votes"] = len(profile._ballots)
             return profile
 
@@ -362,7 +363,7 @@ class Profile_Synthetic(Profile):
 
 
     def __project_generator(self, votes_per_project, **kwargs):
-        return {i:kwargs['budget_distribution'](**kwargs) for i in range(len(votes_per_project))}
+        return {i:np.abs(kwargs['budget_distribution'](**kwargs)) + 1 for i in range(len(votes_per_project))}
 
 
     def __create_metadata(self, votes_per_project, **kwargs):
